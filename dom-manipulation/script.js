@@ -1,75 +1,95 @@
-// Array to store quotes
-let quotes = JSON.parse(localStorage.getItem("quotes")) || [
-  { text: "The best way to predict the future is to invent it.", category: "Motivation" },
+// ==================== QUOTES ARRAY ====================
+let quotes = JSON.parse(localStorage.getItem('quotes')) || [
   { text: "Life is what happens when you're busy making other plans.", category: "Life" },
-  { text: "JavaScript is the language of the web.", category: "Programming" }
+  { text: "The way to get started is to quit talking and begin doing.", category: "Motivation" },
+  { text: "Your time is limited, so don’t waste it living someone else’s life.", category: "Inspiration" }
 ];
 
-// DOM elements
-const quoteDisplay = document.getElementById("quoteDisplay");
+// ==================== DOM ELEMENTS ====================
+const quoteContainer = document.getElementById("quoteContainer");
 const categoryFilter = document.getElementById("categoryFilter");
 
-// Display a random quote (for check purposes)
+// ==================== TASK 1: DISPLAY RANDOM QUOTE ====================
 function displayRandomQuote() {
-  const randomIndex = Math.floor(Math.random() * quotes.length); // includes Math.random for check
-  const randomQuote = quotes[randomIndex];
-  quoteDisplay.innerHTML = `"${randomQuote.text}" - <em>${randomQuote.category}</em>`;
+  if (quotes.length === 0) return;
+  const randomIndex = Math.floor(Math.random() * quotes.length);
+  quoteContainer.innerHTML = `<p>${quotes[randomIndex].text}</p>
+                               <small>${quotes[randomIndex].category}</small>`;
 }
 
-// Populate categories dynamically
+// ==================== TASK 2: CATEGORY FILTER ====================
 function populateCategories() {
-  // Get unique categories
-  const categories = ["all", ...new Set(quotes.map(q => q.category))];
-
-  // Clear current options
-  categoryFilter.innerHTML = "";
-
-  // Add categories to dropdown
-  categories.forEach(category => {
-    const option = document.createElement("option");
-    option.value = category;
-    option.textContent = category.charAt(0).toUpperCase() + category.slice(1);
-    categoryFilter.appendChild(option);
-  });
-
+  const categories = ["All Categories", ...new Set(quotes.map(q => q.category))];
+  categoryFilter.innerHTML = categories.map(cat => `<option value="${cat}">${cat}</option>`).join("");
+  
   // Restore last selected category
   const savedCategory = localStorage.getItem("selectedCategory");
-  if (savedCategory && categories.includes(savedCategory)) {
+  if (savedCategory) {
     categoryFilter.value = savedCategory;
+    filterQuotes();
   }
 }
 
-// Filter quotes by category
 function filterQuotes() {
-  const selectedCategory = categoryFilter.value;
-  localStorage.setItem("selectedCategory", selectedCategory); // save selection
-
-  const filtered = selectedCategory === "all"
-    ? quotes
-    : quotes.filter(q => q.category === selectedCategory);
-
-  // Update displayed quotes
+  const selected = categoryFilter.value;
+  localStorage.setItem("selectedCategory", selected);
+  
+  const filtered = selected === "All Categories" ? quotes : quotes.filter(q => q.category === selected);
+  
   if (filtered.length > 0) {
     const randomIndex = Math.floor(Math.random() * filtered.length);
-    const randomQuote = filtered[randomIndex];
-    quoteDisplay.innerHTML = `"${randomQuote.text}" - <em>${randomQuote.category}</em>`;
+    quoteContainer.innerHTML = `<p>${filtered[randomIndex].text}</p>
+                                 <small>${filtered[randomIndex].category}</small>`;
   } else {
-    quoteDisplay.innerHTML = "No quotes found for this category.";
+    quoteContainer.innerHTML = `<p>No quotes in this category.</p>`;
   }
 }
 
-// Add a new quote
 function addQuote(text, category) {
-  const newQuote = { text, category };
-  quotes.push(newQuote);
+  quotes.push({ text, category });
   localStorage.setItem("quotes", JSON.stringify(quotes));
-
-  // Update categories
   populateCategories();
 }
 
-// Initialize
-document.addEventListener("DOMContentLoaded", () => {
+// ==================== TASK 3: SERVER SYNC & CONFLICT RESOLUTION ====================
+// Simulated server data
+let serverQuotes = [
+  { text: "Success is not final, failure is not fatal.", category: "Motivation" },
+  { text: "In the middle of every difficulty lies opportunity.", category: "Inspiration" }
+];
+
+function syncWithServer() {
+  console.log("Syncing with server...");
+  
+  // Conflict resolution: server wins
+  serverQuotes.forEach(sq => {
+    const localIndex = quotes.findIndex(lq => lq.text === sq.text);
+    if (localIndex === -1) {
+      quotes.push(sq); // Add missing server quote
+    } else {
+      quotes[localIndex] = sq; // Overwrite local version
+    }
+  });
+
+  // Save merged quotes locally
+  localStorage.setItem("quotes", JSON.stringify(quotes));
   populateCategories();
-  filterQuotes(); // show quotes for saved category or all
-});
+  console.log("Sync complete: Local quotes updated from server.");
+  
+  // Show user notification
+  const notif = document.createElement("div");
+  notif.innerText = "Quotes updated from server.";
+  notif.style.background = "yellow";
+  notif.style.padding = "5px";
+  document.body.prepend(notif);
+  setTimeout(() => notif.remove(), 3000);
+}
+
+// ==================== INIT ====================
+window.onload = function() {
+  populateCategories();
+  displayRandomQuote();
+  
+  // Auto-sync every 10 seconds
+  setInterval(syncWithServer, 10000);
+};
