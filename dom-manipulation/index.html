@@ -1,44 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dynamic Quote Generator</title>
-  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
   <h1>Dynamic Quote Generator</h1>
-  
-  <!-- Quote Display -->
-  <div id="quoteDisplay"></div>
-  <button id="newQuote">Show New Quote</button>
- <select id="categoryFilter" onchange="filterQuotes()">
-  <option value="all">All Categories</option>
-</select>
 
-
-  <!-- Add New Quote -->
-  <div>
-    <input id="newQuoteText" type="text" placeholder="Enter a new quote" />
-    <input id="newQuoteCategory" type="text" placeholder="Enter quote category" />
-    <button id="addQuoteBtn">Add Quote</button>
-  </div>
-   <!-- Export Quotes to JSON -->
-<button id="exportJsonBtn">Export Quotes (JSON)</button>
-
-<!-- Import Quotes from JSON -->
-<input type="file" id="importFile" accept=".json" onchange="importFromJsonFile(event)" />
-
-
-  <!-- Category Filter -->
-  <select id="categoryFilter">
+  <!-- Category filter -->
+  <label for="categoryFilter">Filter by category:</label>
+  <select id="categoryFilter" onchange="filterQuotes()">
     <option value="all">All Categories</option>
+    <!-- Categories will be dynamically populated -->
   </select>
 
-  <!-- Import/Export -->
-  <input type="file" id="importFile" accept=".json" />
-  <button id="exportBtn">Export Quotes</button>
+  <!-- Random quote display -->
+  <div id="quoteDisplay"></div>
 
+  <!-- Show random quote button -->
+  <button id="showQuoteBtn" onclick="displayRandomQuote()">Show New Quote</button>
+
+  <!-- Add new quote form -->
+  <form id="addQuoteForm" onsubmit="addQuote(event)">
+    <input type="text" id="quoteText" placeholder="Enter quote" required>
+    <input type="text" id="quoteCategory" placeholder="Enter category" required>
+    <button type="submit">Add Quote</button>
+  </form>
+
+  <!-- Link JS -->
   <script src="script.js"></script>
+
 </body>
 </html>
