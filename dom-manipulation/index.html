@@ -1,36 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dynamic Quote Generator</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dynamic Quote Generator with Filtering</title>
 </head>
 <body>
-
   <h1>Dynamic Quote Generator</h1>
 
-  <!-- Category filter -->
+  <!-- Category Filter -->
   <label for="categoryFilter">Filter by category:</label>
   <select id="categoryFilter" onchange="filterQuotes()">
     <option value="all">All Categories</option>
-    <!-- Categories will be dynamically populated -->
   </select>
 
-  <!-- Random quote display -->
+  <!-- Quote Display -->
   <div id="quoteDisplay"></div>
 
-  <!-- Show random quote button -->
-  <button id="showQuoteBtn" onclick="displayRandomQuote()">Show New Quote</button>
+  <!-- Add Quote Form -->
+  <h2>Add a New Quote</h2>
+  <input type="text" id="quoteText" placeholder="Quote text" />
+  <input type="text" id="quoteCategory" placeholder="Category" />
+  <button onclick="addQuote(
+    document.getElementById('quoteText').value,
+    document.getElementById('quoteCategory').value
+  )">Add Quote</button>
 
-  <!-- Add new quote form -->
-  <form id="addQuoteForm" onsubmit="addQuote(event)">
-    <input type="text" id="quoteText" placeholder="Enter quote" required>
-    <input type="text" id="quoteCategory" placeholder="Enter category" required>
-    <button type="submit">Add Quote</button>
-  </form>
-
-  <!-- Link JS -->
   <script src="script.js"></script>
-
 </body>
 </html>
