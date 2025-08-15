@@ -1,95 +1,109 @@
-// ==================== QUOTES ARRAY ====================
+// ==================== Local Data ====================
 let quotes = JSON.parse(localStorage.getItem('quotes')) || [
   { text: "Life is what happens when you're busy making other plans.", category: "Life" },
-  { text: "The way to get started is to quit talking and begin doing.", category: "Motivation" },
-  { text: "Your time is limited, so don’t waste it living someone else’s life.", category: "Inspiration" }
+  { text: "The way to get started is to quit talking and begin doing.", category: "Motivation" }
 ];
 
-// ==================== DOM ELEMENTS ====================
+// ==================== DOM Elements ====================
 const quoteContainer = document.getElementById("quoteContainer");
 const categoryFilter = document.getElementById("categoryFilter");
+const notificationContainer = document.getElementById("notificationContainer");
 
-// ==================== TASK 1: DISPLAY RANDOM QUOTE ====================
+// ==================== Display Random Quote ====================
 function displayRandomQuote() {
   if (quotes.length === 0) return;
   const randomIndex = Math.floor(Math.random() * quotes.length);
-  quoteContainer.innerHTML = `<p>${quotes[randomIndex].text}</p>
-                               <small>${quotes[randomIndex].category}</small>`;
+  const quote = quotes[randomIndex];
+  quoteContainer.innerHTML = `<p>${quote.text}</p><small>${quote.category}</small>`;
 }
 
-// ==================== TASK 2: CATEGORY FILTER ====================
+// ==================== Category Management ====================
 function populateCategories() {
   const categories = ["All Categories", ...new Set(quotes.map(q => q.category))];
   categoryFilter.innerHTML = categories.map(cat => `<option value="${cat}">${cat}</option>`).join("");
-  
-  // Restore last selected category
-  const savedCategory = localStorage.getItem("selectedCategory");
-  if (savedCategory) {
-    categoryFilter.value = savedCategory;
-    filterQuotes();
-  }
 }
 
 function filterQuotes() {
   const selected = categoryFilter.value;
-  localStorage.setItem("selectedCategory", selected);
-  
   const filtered = selected === "All Categories" ? quotes : quotes.filter(q => q.category === selected);
-  
   if (filtered.length > 0) {
     const randomIndex = Math.floor(Math.random() * filtered.length);
-    quoteContainer.innerHTML = `<p>${filtered[randomIndex].text}</p>
-                                 <small>${filtered[randomIndex].category}</small>`;
+    const quote = filtered[randomIndex];
+    quoteContainer.innerHTML = `<p>${quote.text}</p><small>${quote.category}</small>`;
   } else {
-    quoteContainer.innerHTML = `<p>No quotes in this category.</p>`;
+    quoteContainer.innerHTML = `<p>No quotes found in this category.</p>`;
   }
 }
 
-function addQuote(text, category) {
-  quotes.push({ text, category });
-  localStorage.setItem("quotes", JSON.stringify(quotes));
-  populateCategories();
+// ==================== Server Interaction (Mock API) ====================
+
+// Step 1: Fetch quotes from server
+async function fetchQuotesFromServer() {
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/posts?_limit=5");
+    const data = await response.json();
+    // Map mock API data into our quote format
+    return data.map(item => ({
+      text: item.title,
+      category: "Server"
+    }));
+  } catch (error) {
+    console.error("Error fetching from server:", error);
+    return [];
+  }
 }
 
-// ==================== TASK 3: SERVER SYNC & CONFLICT RESOLUTION ====================
-// Simulated server data
-let serverQuotes = [
-  { text: "Success is not final, failure is not fatal.", category: "Motivation" },
-  { text: "In the middle of every difficulty lies opportunity.", category: "Inspiration" }
-];
+// Step 2: Post new quote to server
+async function postQuoteToServer(quote) {
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/posts", {
+      method: "POST",
+      body: JSON.stringify(quote),
+      headers: { "Content-Type": "application/json" }
+    });
+    const result = await response.json();
+    console.log("Posted to server:", result);
+  } catch (error) {
+    console.error("Error posting to server:", error);
+  }
+}
 
-function syncWithServer() {
+// Step 3: Sync logic with conflict resolution
+async function syncQuotes() {
   console.log("Syncing with server...");
-  
-  // Conflict resolution: server wins
-  serverQuotes.forEach(sq => {
-    const localIndex = quotes.findIndex(lq => lq.text === sq.text);
+  const serverQuotes = await fetchQuotesFromServer();
+
+  let conflictResolved = false;
+
+  serverQuotes.forEach(serverQuote => {
+    const localIndex = quotes.findIndex(q => q.text === serverQuote.text);
     if (localIndex === -1) {
-      quotes.push(sq); // Add missing server quote
+      quotes.push(serverQuote); // Add missing server quote
+      conflictResolved = true;
     } else {
-      quotes[localIndex] = sq; // Overwrite local version
+      quotes[localIndex] = serverQuote; // Overwrite local quote
+      conflictResolved = true;
     }
   });
 
-  // Save merged quotes locally
   localStorage.setItem("quotes", JSON.stringify(quotes));
   populateCategories();
-  console.log("Sync complete: Local quotes updated from server.");
-  
-  // Show user notification
-  const notif = document.createElement("div");
-  notif.innerText = "Quotes updated from server.";
-  notif.style.background = "yellow";
-  notif.style.padding = "5px";
-  document.body.prepend(notif);
-  setTimeout(() => notif.remove(), 3000);
+
+  if (conflictResolved) {
+    showNotification("Quotes updated from server with conflict resolution.");
+  }
 }
 
-// ==================== INIT ====================
-window.onload = function() {
+// ==================== UI Notification ====================
+function showNotification(message) {
+  if (!notificationContainer) return;
+  notificationContainer.innerHTML = `<div style="background: yellow; padding: 5px; margin-bottom: 10px;">
+    ${message}
+  </div>`;
+  setTimeout(() => notificationContainer.innerHTML = "", 3000);
+}
+
+// ==================== Init ====================
+window.onload = () => {
   populateCategories();
-  displayRandomQuote();
-  
-  // Auto-sync every 10 seconds
-  setInterval(syncWithServer, 10000);
-};
+  displayRandomQuote()
